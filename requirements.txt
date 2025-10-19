@@ -5,3 +5,6 @@ openai==1.107.2
 python-dotenv==1.0.1
 pypdf==4.2.0
 tqdm==4.66.5
+requests==2.32.5
+bs4==0.0.2
+Markdown==3.9

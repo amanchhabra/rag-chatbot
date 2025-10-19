@@ -11,7 +11,6 @@ RAG Chatbot (Retrieval-Augmented Generation Chatbot) is an AI-powered question-a
 - Multi-LLM support: Switch between providers such as OpenAI, Anthropic, Hugging Face, or OCI.
 - Web interface: Clean UI built with Flask and Bootstrap for chat, document management, and settings.
 - Chat history: Store, review, export, and manage previous conversations.
-- Confluence integration: (Optional) Fetch pages and embed them into the knowledge base.
 - URL ingestion: Add web links as data sources with graceful handling of restricted sites.
 
 ## Tech Stack
@@ -19,7 +18,7 @@ RAG Chatbot (Retrieval-Augmented Generation Chatbot) is an AI-powered question-a
 - Backend: Python, Flask, FAISS
 - Embeddings and LLM: OpenAI, Hugging Face, Anthropic, OCI (configurable)
 - Frontend: Jinja2, Bootstrap 5, Markdown
-- Data storage: Pickle (prototype) or SQLite/Postgres (for production)
+- Data storage: Pickle (prototype)
 - Integrations: Confluence REST API, web page ingestion
 
 ## Getting Started
@@ -41,20 +40,14 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Set environment variables
-Create a `.env` file in the project root and add:
-```
-OPENAI_API_KEY=your_openai_api_key
-CONFLUENCE_EMAIL=your_email
-CONFLUENCE_API_TOKEN=your_confluence_token
-CONFLUENCE_BASE=https://your-domain.atlassian.net/wiki
-```
-
-### 5. Run the application
+### 4. Run the application
 ```bash
 python app.py
 ```
 Access it in your browser at: `http://127.0.0.1:5001`
+
+### 5. Add OPENAI Key in Settings
+In the UI, under settings page, add and save your OPENAPI key.
 
 ## Project Structure
 
