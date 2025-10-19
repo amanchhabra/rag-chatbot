@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Documents - RAG Chatbot{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Current Knowledge Base</h3>
+
+{% if docs %}
+<table class="table table-hover align-middle shadow-sm rounded bg-white">
+  <thead class="table-light">
+    <tr>
+      <th>Source</th>
+      <th class="text-center">Chunks</th>
+      <th class="text-end">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for doc, info in docs.items() %}
+    <tr>
+      <td>
+        <span data-bs-toggle="tooltip" title="{{ doc }}">
+          {{ doc|truncate(40, True, '...') }}
+        </span>
+      </td>
+      <td class="text-center">
+        <span class="badge bg-primary rounded-pill">{{ info.count }}</span>
+      </td>
+      <td class="text-end">
+        <div class="btn-group" role="group">
+          <!-- Delete -->
+          <a href="{{ url_for('delete_doc', doc=doc) }}" 
+             class="btn btn-outline-danger btn-sm" 
+             title="Delete document">
+            <i class="bi bi-trash"></i>
+          </a>
+
+          <!-- Refresh -->
+          {% if info.type != 'file' %}
+          <a href="{{ url_for('refresh_doc', doc=doc) }}" 
+             class="btn btn-outline-warning btn-sm" 
+             title="Refresh document">
+            <i class="bi bi-arrow-clockwise"></i>
+          </a>
+          {% else %}
+          <button type="button" class="btn btn-outline-secondary btn-sm disabled" 
+                  data-bs-toggle="tooltip" 
+                  title="Refresh not available for uploaded files. Please delete and reupload">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-info shadow-sm">
+  No documents currently in the knowledge base.
+</div>
+{% endif %}
+{% endblock %}

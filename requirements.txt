@@ -1,0 +1,7 @@
+flask==3.0.3
+faiss-cpu==1.8.0.post1
+numpy==1.26.4
+openai==1.107.2
+python-dotenv==1.0.1
+pypdf==4.2.0
+tqdm==4.66.5

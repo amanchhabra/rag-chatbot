@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - RAG Chatbot{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Settings</h3>
+
+<form method="POST" class="bg-white p-4 rounded shadow-sm">
+
+  <!-- Provider selection -->
+  <div class="mb-3">
+    <label class="form-label fw-bold">LLM Provider</label>
+    <select id="providerSelect" name="llm_provider" class="form-select">
+      <option value="openai" {% if llm_provider == 'openai' %}selected{% endif %}>OpenAI</option>
+      <option value="ollama" {% if llm_provider == 'ollama' %}selected{% endif %}>Ollama (Local)</option>
+      <option value="anthropic" {% if llm_provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude)</option>
+      <option value="huggingface" {% if llm_provider == 'huggingface' %}selected{% endif %}>Hugging Face</option>
+      <option value="oci" {% if llm_provider == 'oci' %}selected{% endif %}>OCI (Oracle Cloud)</option>
+    </select>
+  </div>
+
+  <!-- API key inputs (per provider) -->
+  <div id="openaiBox" class="mb-3 provider-box">
+    <label class="form-label fw-bold">OpenAI API Key</label>
+    <input type="password" name="openai_key" class="form-control" value="{{ openai_key }}">
+  </div>
+
+  <div id="anthropicBox" class="mb-3 provider-box">
+    <label class="form-label fw-bold">Anthropic API Key</label>
+    <input type="password" name="anthropic_key" class="form-control" value="{{ anthropic_key }}">
+  </div>
+
+  <div id="huggingfaceBox" class="mb-3 provider-box">
+    <label class="form-label fw-bold">Hugging Face API Key</label>
+    <input type="password" name="huggingface_key" class="form-control" value="{{ huggingface_key }}">
+  </div>
+
+  <div id="ociBox" class="mb-3 provider-box">
+    <label class="form-label fw-bold">OCI API Key</label>
+    <input type="password" name="oci_key" class="form-control" value="{{ oci_key }}">
+    <label class="form-label fw-bold mt-2">OCI Endpoint</label>
+    <input type="text" name="oci_endpoint" class="form-control" value="{{ oci_endpoint }}" placeholder="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com">
+  </div>
+
+  <!-- Default Model -->
+  <div class="mb-3">
+    <label class="form-label fw-bold">Default Model</label>
+    <select id="modelSelect" name="llm_model" class="form-select"></select>
+  </div>
+
+  <!-- 🔹 Integration Widgets -->
+  <h5 class="mt-4">Integrations</h5>
+
+  <!-- Confluence -->
+  <div class="card p-3 mb-3">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="confluenceToggle" name="confluence_enabled" 
+             {% if confluence_enabled %}checked{% endif %}>
+      <label class="form-check-label fw-bold" for="confluenceToggle">Enable Confluence</label>
+    </div>
+    <div id="confluenceBox" class="mt-2" style="display: {% if confluence_enabled %}block{% else %}none{% endif %};">
+      <label class="form-label">Confluence API Token</label>
+      <input type="password" name="confluence_key" class="form-control" value="{{ confluence_key }}">
+    </div>
+  </div>
+
+  <!-- Jira -->
+  <div class="card p-3 mb-3">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="jiraToggle" name="jira_enabled" 
+             {% if jira_enabled %}checked{% endif %}>
+      <label class="form-check-label fw-bold" for="jiraToggle">Enable Jira</label>
+    </div>
+    <div id="jiraBox" class="mt-2" style="display: {% if jira_enabled %}block{% else %}none{% endif %};">
+      <label class="form-label">Jira API Token</label>
+      <input type="password" name="jira_key" class="form-control" value="{{ jira_key }}">
+    </div>
+  </div>
+
+  <button class="btn btn-primary mt-3">Save</button>
+</form>
+
+<!-- JS for toggling providers + integrations + model list -->
+<script>
+  const modelOptions = {
+    "openai": ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"],
+    "ollama": ["llama2", "mistral", "codellama"],
+    "anthropic": ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
+    "huggingface": ["sentence-transformers/all-MiniLM-L6-v2", "tiiuae/falcon-7b-instruct", "mistralai/Mistral-7B-Instruct-v0.2"],
+    "oci": ["cohere.command-r-plus", "cohere.command-r", "meta.llama-3-70b-instruct"]
+  };
+
+  function toggleProviderFields() {
+    let provider = document.getElementById("providerSelect").value;
+
+    // hide all provider boxes
+    document.querySelectorAll(".provider-box").forEach(el => el.style.display = "none");
+
+    // show only the selected provider box
+    if (provider === "openai") {
+      document.getElementById("openaiBox").style.display = "block";
+    } else if (provider === "anthropic") {
+      document.getElementById("anthropicBox").style.display = "block";
+    } else if (provider === "huggingface") {
+      document.getElementById("huggingfaceBox").style.display = "block";
+    } else if (provider === "oci") {
+      document.getElementById("ociBox").style.display = "block";
+    }
+
+    // populate model dropdown
+    const modelSelect = document.getElementById("modelSelect");
+    modelSelect.innerHTML = "";
+    (modelOptions[provider] || []).forEach(m => {
+      let opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      if ("{{ llm_model }}" === m) {
+        opt.selected = true;
+      }
+      modelSelect.appendChild(opt);
+    });
+  }
+
+  // Run on page load
+  document.addEventListener("DOMContentLoaded", toggleProviderFields);
+
+  // Run when provider changes
+  document.getElementById("providerSelect").addEventListener("change", toggleProviderFields);
+
+  // Toggle integrations
+  function toggleBox(toggleId, boxId) {
+    const toggle = document.getElementById(toggleId);
+    const box = document.getElementById(boxId);
+    if (toggle) {
+      toggle.addEventListener("change", () => {
+        box.style.display = toggle.checked ? "block" : "none";
+      });
+    }
+  }
+  toggleBox("confluenceToggle", "confluenceBox");
+  toggleBox("jiraToggle", "jiraBox");
+</script>
+{% endblock %}

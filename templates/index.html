@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - RAG Chatbot{% endblock %}
+
+{% block content %}
+<div id="loadingSpinner" class="text-center my-3 d-none">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="mt-2">Thinking...</p>
+</div>
+
+<!-- Question form -->
+<form id="askForm" method="POST" class="d-flex mb-4">
+  <input type="text" name="query" class="form-control me-2" placeholder="Ask a question..." required>
+  <button class="btn btn-primary">
+    <i class="bi bi-send"></i> Ask
+  </button>
+</form>
+
+<!-- Chat history header with Delete All -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>Chat History</h4>
+  {% if history %}
+  <form method="POST" action="{{ url_for('delete_all_chats') }}">
+    <button class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-trash"></i> Delete All Chats
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<!-- Accordion with chat history -->
+<div class="accordion" id="chatAccordion">
+  {% for entry in history %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{ loop.index }}">
+      <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" 
+              type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#collapse{{ loop.index }}" 
+              aria-expanded="{{ 'true' if loop.first else 'false' }}" 
+              aria-controls="collapse{{ loop.index }}">
+        Q: {{ entry.query }}
+      </button>
+    </h2>
+    <div id="collapse{{ loop.index }}" 
+         class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+         aria-labelledby="heading{{ loop.index }}" 
+         data-bs-parent="#chatAccordion">
+      <div class="accordion-body">
+
+        <!-- Answer -->
+        <div class="answer" id="answer-{{ loop.index }}" class="mb-3">
+          A: {{ entry.answer|safe }}
+        </div>
+
+        <!-- Sources -->
+        {% if entry.sources %}
+        <div class="mt-2">
+          <b>Sources:</b>
+          <ul class="list-group mt-1">
+            {% for s in entry.sources[0:1] %}
+            <li class="list-group-item">
+              <b>
+                {% if s.link %}
+                <a href="{{ s.link }}{% if s.page %}#page={{ s.page }}{% endif %}" target="_blank">
+                  {{ s.source }}
+                </a>
+                {% else %}
+                  {{ s.source }}
+                {% endif %}
+              </b>
+              — Page {{ s.page }}<br>
+              <small class="text-muted">{{ s.preview }}</small>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- Toolbar -->
+        <div class="d-flex justify-content-start gap-2 mt-3 border-top pt-2">
+          <!-- Copy -->
+          <button class="btn btn-sm btn-outline-secondary copy-btn"
+                  data-target="answer-{{ loop.index }}" title="Copy answer">
+            <i class="bi bi-clipboard"></i>
+          </button>
+
+          <!-- Export -->
+          <form method="POST" action="{{ url_for('export_chat', chat_id=loop.index0) }}">
+            <button class="btn btn-sm btn-outline-secondary" title="Export chat">
+              <i class="bi bi-download"></i>
+            </button>
+          </form>
+
+          <!-- Delete -->
+          <form method="POST" action="{{ url_for('delete_chat', chat_id=loop.index0) }}">
+            <button class="btn btn-sm btn-outline-secondary" title="Delete chat">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No chats yet. Ask something above to get started!</div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("click", function(e) {
+  if (e.target.closest(".copy-btn")) {
+    const btn = e.target.closest(".copy-btn");
+    const targetId = btn.getAttribute("data-target");
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) {
+      let text = targetEl.innerText.trim();
+      if (!text) {
+        text = targetEl.innerHTML.replace(/<[^>]+>/g, "").trim();
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 1500);
+      }).catch(err => console.error("Clipboard error:", err));
+    }
+  }
+});
+
+const askForm = document.getElementById("askForm");
+const spinner = document.getElementById("loadingSpinner");
+
+askForm.addEventListener("submit", function() {
+  spinner.classList.remove("d-none"); // show spinner
+});
+
+window.addEventListener("load", function() {
+  spinner.classList.add("d-none"); // hide on reload
+});
+</script>
+{% endblock %}
